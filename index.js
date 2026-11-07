@@ -16,6 +16,7 @@ import { cleanupTemporaryChannels } from "./systems/temporaryVoice.js"
 import { startHealthServer } from "./systems/healthServer.js"
 import { initializeDataDirectory } from "./handlers/dataDirectory.js"
 import registerGuildMemberAdd from "./events/guildMemberAdd.js"
+import registerGuildMemberRemove from "./events/guildMemberRemove.js"
 
 const client = new Client({
   intents: [
@@ -71,6 +72,7 @@ async function startBot() {
     registerMessageHandler(client)
     registerVoiceStateUpdate(client)
     registerGuildMemberAdd(client)
+    registerGuildMemberRemove(client)
 
     healthServer = await startHealthServer({
       isReady: () => client.isReady(),

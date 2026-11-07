@@ -106,6 +106,16 @@ grant administrative, moderation, or server-management permissions. The bot
 needs **Manage Roles**, and its highest role must be above the selected role.
 Configure a low-privilege member role; bot accounts are not assigned this role.
 
+## Welcome and departure messages
+
+Run `/welcome-setup` as a server administrator with a welcome or leave channel
+to enable the corresponding message. Customize each message with `{member}`,
+`{server}`, and `{count}`; messages do not ping anyone. You can update an
+existing message without changing its channel, or disable either message with
+`disable_welcome` or `disable_leave`. The bot needs **View Channel** and **Send
+Messages** in each configured channel. Bot accounts do not trigger these
+messages.
+
 ## Security notes
 
 - The health endpoint returns only a readiness status; it has no bot controls,

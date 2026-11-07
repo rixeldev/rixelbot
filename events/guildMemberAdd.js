@@ -1,6 +1,7 @@
 import { Events } from "discord.js"
 import { handleMemberJoinGuard } from "../systems/autoModeration.js"
 import { handleMemberAutoRole } from "../systems/autoRole.js"
+import { sendMemberMessage } from "../systems/memberMessages.js"
 
 export default function registerGuildMemberAdd(client) {
   client.on(Events.GuildMemberAdd, async (member) => {
@@ -18,6 +19,15 @@ export default function registerGuildMemberAdd(client) {
     } catch (error) {
       console.error(
         `Automatic role assignment failed in guild ${member.guild.id} for member ${member.id}:`,
+        error,
+      )
+    }
+
+    try {
+      await sendMemberMessage(member, "welcome")
+    } catch (error) {
+      console.error(
+        `Welcome message failed in guild ${member.guild.id} for member ${member.id}:`,
         error,
       )
     }

@@ -68,6 +68,27 @@ export async function setAutoRoleConfig(guildId, roleId) {
   })
 }
 
+export async function setMemberMessagesConfig(guildId, memberMessages) {
+  return updateConfig((config) => {
+    config[guildId] ??= {}
+
+    const updatedConfig = {
+      ...config[guildId].memberMessages,
+      ...memberMessages,
+    }
+
+    for (const [event, eventConfig] of Object.entries(updatedConfig)) {
+      if (eventConfig === null) delete updatedConfig[event]
+    }
+
+    if (Object.keys(updatedConfig).length === 0) {
+      delete config[guildId].memberMessages
+    } else {
+      config[guildId].memberMessages = updatedConfig
+    }
+  })
+}
+
 export async function getGuildConfig(guildId) {
   await writeQueue
 
