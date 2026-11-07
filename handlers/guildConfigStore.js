@@ -75,6 +75,7 @@ export async function setRolePanelConfig(guildId, messageId, panelConfig) {
     config[guildId].rolePanels[messageId] = {
       channelId: panelConfig.channelId,
       roles: { ...panelConfig.roles },
+      selectionMode: panelConfig.selectionMode || "multiple",
     }
   })
 }

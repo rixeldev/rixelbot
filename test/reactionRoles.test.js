@@ -141,7 +141,82 @@ test("reaction assignment refuses a role that later gains permissions", async ()
 
   await assert.rejects(
     handleRoleReaction(reaction, { id: "member" }, true),
-    /now has permissions/,
+    /permissions; refusing self-assignment/,
+  )
+})
+
+test("exclusive panels remove other selected panel roles and reactions", async () => {
+  await setRolePanelConfig("guild-exclusive", "exclusive-panel", {
+    channelId: "panel-channel",
+    selectionMode: "exclusive",
+    roles: {
+      "🎨": "art-role",
+      "🎵": "music-role",
+    },
+  })
+
+  const removedRoles = []
+  const removedReactions = []
+  const roles = [
+    { id: "art-role", permissions: { bitfield: 0n }, editable: true },
+    { id: "music-role", permissions: { bitfield: 0n }, editable: true },
+  ]
+  const member = {
+    user: { bot: false },
+    roles: {
+      cache: new Map([["art-role", roles[0]]]),
+      add: async (role) => {
+        member.roles.cache.set(role.id, role)
+      },
+      remove: async (rolesToRemove) => {
+        removedRoles.push(...rolesToRemove.map(({ id }) => id))
+        for (const role of rolesToRemove) member.roles.cache.delete(role.id)
+      },
+    },
+  }
+  const guild = {
+    id: "guild-exclusive",
+    members: { fetch: async () => member },
+    roles: { fetch: async (id) => roles.find((role) => role.id === id) },
+  }
+  const message = {
+    id: "exclusive-panel",
+    channelId: "panel-channel",
+    guild,
+    partial: false,
+    reactions: {
+      cache: {
+        find: (callback) => {
+          const reaction = reactions.find(callback)
+          return reaction
+        },
+      },
+    },
+  }
+  const reactions = [
+    {
+      emoji: { name: "🎨" },
+      users: { remove: async (userId) => removedReactions.push(["🎨", userId]) },
+    },
+    {
+      emoji: { name: "🎵" },
+      users: { remove: async (userId) => removedReactions.push(["🎵", userId]) },
+    },
+  ]
+
+  assert.equal(
+    await handleRoleReaction(
+      { partial: false, message, emoji: { name: "🎵" } },
+      { id: "member" },
+      true,
+    ),
+    true,
+  )
+  assert.deepEqual(removedRoles, ["art-role"])
+  assert.deepEqual(removedReactions, [["🎨", "member"]])
+  assert.deepEqual(
+    [...member.roles.cache.keys()].sort(),
+    ["music-role"],
   )
 })
 
@@ -207,10 +282,12 @@ test("role panel command publishes reactions after saving panel configuration", 
   const command = rolePanel.data.toJSON()
   assert.equal(command.name, "role-panel")
   assert.equal(command.default_member_permissions, "32")
-  assert.equal(command.options.length, 23)
+  assert.equal(command.options.length, 24)
 
   const reactions = []
   let publishedPayload
+  let selectionMode = null
+  let nextMessageId = 0
   const role = {
     id: "color-role",
     name: "Artist",
@@ -230,8 +307,9 @@ test("role panel command publishes reactions after saving panel configuration", 
     permissionsFor: () => ({ has: () => true }),
     send: async (payload) => {
       publishedPayload = payload
+      nextMessageId += 1
       return {
-        id: "created-panel",
+        id: `created-panel-${nextMessageId}`,
         url: "https://discord.test/panel",
         react: async (emoji) => reactions.push(emoji),
         delete: async () => {},
@@ -263,6 +341,7 @@ test("role panel command publishes reactions after saving panel configuration", 
         if (name === "emoji_1") return "🎨"
         if (name === "title") return null
         if (name === "description") return null
+        if (name === "selection_mode") return selectionMode
         return null
       },
     },
@@ -276,10 +355,21 @@ test("role panel command publishes reactions after saving panel configuration", 
   assert.deepEqual(publishedPayload.allowedMentions, { parse: [] })
   assert.match(replies[0], /role panel is ready/)
   assert.deepEqual(
-    (await getGuildConfig(interaction.guildId)).rolePanels["created-panel"]
+    (await getGuildConfig(interaction.guildId)).rolePanels["created-panel-1"]
       .roles,
     { "🎨": "color-role" },
   )
+  assert.equal(
+    (await getGuildConfig(interaction.guildId)).rolePanels["created-panel-1"]
+      .selectionMode,
+    "multiple",
+  )
+
+  selectionMode = "exclusive"
+  await rolePanel.execute(interaction)
+  const config = await getGuildConfig(interaction.guildId)
+  assert.equal(config.rolePanels["created-panel-2"].selectionMode, "exclusive")
+  assert.match(publishedPayload.embeds[0].data.description, /removes your other role selections/)
 })
 
 test("role panel permission check includes reaction and history access", () => {

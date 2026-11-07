@@ -90,6 +90,15 @@ export default {
         .setDescription("Instructions shown above the role list.")
         .setMaxLength(1000),
     )
+    .addStringOption((option) =>
+      option
+        .setName("selection_mode")
+        .setDescription("Whether members can choose multiple roles or only one.")
+        .addChoices(
+          { name: "Multiple roles", value: "multiple" },
+          { name: "One role at a time", value: "exclusive" },
+        ),
+    )
     .addRoleOption((option) =>
       option.setName("role_1").setDescription("First cosmetic role."),
     )
@@ -237,6 +246,8 @@ export default {
     const description =
       interaction.options.getString("description") ||
       "React below to add or remove a cosmetic role."
+    const selectionMode =
+      interaction.options.getString("selection_mode") || "multiple"
     const embed = new EmbedBuilder()
       .setColor(0x5865f2)
       .setTitle(title)
@@ -245,6 +256,10 @@ export default {
           description,
           "",
           ...mappings.map(({ role, emoji }) => `${emoji} — <@&${role.id}>`),
+          "",
+          selectionMode === "exclusive"
+            ? "Choosing a role removes your other role selections from this panel."
+            : "You can choose more than one role.",
         ].join("\n"),
       )
       .setFooter({ text: "React to add a role; remove your reaction to remove it." })
@@ -261,6 +276,7 @@ export default {
 
       await setRolePanelConfig(interaction.guildId, panelMessage.id, {
         channelId: channel.id,
+        selectionMode,
         roles: Object.fromEntries(
           mappings.map(({ role, emoji }) => [emoji, role.id]),
         ),

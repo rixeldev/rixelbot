@@ -116,11 +116,14 @@ Configure a low-privilege member role; bot accounts are not assigned this role.
 
 ## Reaction role panel
 
-Run `/role-panel` to post an embed with up to 10 emoji-to-role choices. Members
-can react to add a role and remove their reaction to remove it. Only roles with
-no Discord permissions are accepted, and they must be below roles that have
-permissions. Use `/role-panel-remove message_id:<id>` to disable a panel; its
-message can then be deleted manually.
+Run `/role-panel` to post an embed with up to 10 emoji-to-role choices. By
+default, members can react to add multiple roles and remove a role by removing
+their reaction. Set `selection_mode` to **One role at a time** to make choices
+exclusive within that panel: choosing another option removes the previous
+selection from that panel. Roles selected in other panels are unaffected. Only
+roles with no Discord permissions are accepted, and they must be below roles
+that have permissions. Use `/role-panel-remove message_id:<id>` to disable a
+panel; its message can then be deleted manually.
 
 The bot needs **View Channel**, **Send Messages**, **Embed Links**, **Add
 Reactions**, and **Read Message History** in the panel channel. Enable the
