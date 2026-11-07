@@ -10,6 +10,12 @@ const __dirname = path.dirname(__filename)
 
 async function deployCommands() {
   try {
+    for (const variable of ["DISCORD_TOKEN", "CLIENT_ID", "GUILD_ID"]) {
+      if (!process.env[variable]) {
+        throw new Error(`${variable} is required to deploy commands`)
+      }
+    }
+
     const commands = []
     const commandsPath = path.join(__dirname, "commands")
 
@@ -39,6 +45,7 @@ async function deployCommands() {
     console.log(`✅ ${commands.length} command(s) registered!`)
   } catch (error) {
     console.error("Error registering commands:", error)
+    process.exitCode = 1
   }
 }
 

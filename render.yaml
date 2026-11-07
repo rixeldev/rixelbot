@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: rixelbot
+    runtime: node
+    plan: starter
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data
+      - key: DISCORD_TOKEN
+        sync: false
+    disk:
+      name: rixelbot-data
+      mountPath: /var/data
+      sizeGB: 1
