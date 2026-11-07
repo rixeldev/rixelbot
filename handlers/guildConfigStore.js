@@ -56,6 +56,18 @@ export async function setGuardConfig(guildId, guardConfig) {
   })
 }
 
+export async function setAutoRoleConfig(guildId, roleId) {
+  return updateConfig((config) => {
+    config[guildId] ??= {}
+
+    if (roleId) {
+      config[guildId].autoRoleConfig = { roleId }
+    } else {
+      delete config[guildId].autoRoleConfig
+    }
+  })
+}
+
 export async function getGuildConfig(guildId) {
   await writeQueue
 

@@ -97,6 +97,15 @@ the alert channel, and **Moderate Members** only when using `delete_timeout`.
 This feature does not automatically ban, kick, or lock the server. Review the
 alert channel and tune thresholds to the server's normal traffic.
 
+## Automatic member role
+
+Run `/autorole-setup role:<role>` as a server administrator to assign one basic
+role when a human member joins. Omitting the role option disables the feature.
+For safety, the selected role cannot be `@everyone`, integration-managed, or
+grant administrative, moderation, or server-management permissions. The bot
+needs **Manage Roles**, and its highest role must be above the selected role.
+Configure a low-privilege member role; bot accounts are not assigned this role.
+
 ## Security notes
 
 - The health endpoint returns only a readiness status; it has no bot controls,
