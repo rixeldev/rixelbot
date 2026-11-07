@@ -114,6 +114,21 @@ grant administrative, moderation, or server-management permissions. The bot
 needs **Manage Roles**, and its highest role must be above the selected role.
 Configure a low-privilege member role; bot accounts are not assigned this role.
 
+## Reaction role panel
+
+Run `/role-panel` to post an embed with up to 10 emoji-to-role choices. Members
+can react to add a role and remove their reaction to remove it. Only roles with
+no Discord permissions are accepted, and they must be below roles that have
+permissions. Use `/role-panel-remove message_id:<id>` to disable a panel; its
+message can then be deleted manually.
+
+The bot needs **View Channel**, **Send Messages**, **Embed Links**, **Add
+Reactions**, and **Read Message History** in the panel channel. Enable the
+**Server Members** privileged intent in the Developer Portal, as well as the
+`Guild Message Reactions` intent requested by the bot. Keep cosmetic roles
+below staff roles and do not give them channel-specific permission overrides;
+those overrides can grant access even when the role itself has no permissions.
+
 ## Welcome and departure messages
 
 Run `/welcome-setup` as a server administrator with a welcome or leave channel

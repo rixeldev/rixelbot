@@ -68,6 +68,29 @@ export async function setAutoRoleConfig(guildId, roleId) {
   })
 }
 
+export async function setRolePanelConfig(guildId, messageId, panelConfig) {
+  return updateConfig((config) => {
+    config[guildId] ??= {}
+    config[guildId].rolePanels ??= {}
+    config[guildId].rolePanels[messageId] = {
+      channelId: panelConfig.channelId,
+      roles: { ...panelConfig.roles },
+    }
+  })
+}
+
+export async function removeRolePanelConfig(guildId, messageId) {
+  return updateConfig((config) => {
+    const rolePanels = config[guildId]?.rolePanels
+    if (!rolePanels) return
+
+    delete rolePanels[messageId]
+    if (Object.keys(rolePanels).length === 0) {
+      delete config[guildId].rolePanels
+    }
+  })
+}
+
 export async function setMemberMessagesConfig(guildId, memberMessages) {
   return updateConfig((config) => {
     config[guildId] ??= {}

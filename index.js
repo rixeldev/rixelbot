@@ -17,18 +17,25 @@ import { startHealthServer } from "./systems/healthServer.js"
 import { initializeDataDirectory } from "./handlers/dataDirectory.js"
 import registerGuildMemberAdd from "./events/guildMemberAdd.js"
 import registerGuildMemberRemove from "./events/guildMemberRemove.js"
+import registerReactionRoleEvents from "./events/reactionRole.js"
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildModeration,
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.DirectMessages,
   ],
-  partials: [Partials.Channel],
+  partials: [
+    Partials.Channel,
+    Partials.Message,
+    Partials.Reaction,
+    Partials.User,
+  ],
 })
 
 client.commands = new Collection()
@@ -73,6 +80,7 @@ async function startBot() {
     registerVoiceStateUpdate(client)
     registerGuildMemberAdd(client)
     registerGuildMemberRemove(client)
+    registerReactionRoleEvents(client)
 
     healthServer = await startHealthServer({
       isReady: () => client.isReady(),
