@@ -125,6 +125,13 @@ warning and records who revoked it, when, and why; the warning history labels
 revoked entries, and the moderation log records the action when `/setlogs` is
 configured. Supply a reason when revoking a warning for a clearer audit trail.
 
+## Ban management
+
+Moderators with **Ban Members** can ban members using `/ban` and remove an
+existing ban by user ID with `/unban user_id:<id>`. The unban command verifies
+that the ID is valid and currently banned before changing server state. Both
+slash and prefix forms record the action in the configured moderation log.
+
 ## Security notes
 
 - The health endpoint returns only a readiness status; it has no bot controls,

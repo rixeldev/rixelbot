@@ -33,6 +33,10 @@ export async function logModerationAction(
         title: "🔨 Member Banned",
         color: 0xed4245,
       },
+      UNBAN: {
+        title: "♻️ Member Unbanned",
+        color: 0x57f287,
+      },
       KICK: {
         title: "👢 Member Kicked",
         color: 0xed4245,
