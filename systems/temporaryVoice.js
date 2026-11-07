@@ -12,12 +12,9 @@ import {
 
 import fs from "node:fs"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
+import { dataDirectory } from "../handlers/dataDirectory.js"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const DATA_PATH = path.join(__dirname, "../data/temporaryVoice.json")
+const DATA_PATH = path.join(dataDirectory, "temporaryVoice.json")
 
 const DEFAULT_LIMIT = 5
 const MAX_LIMIT = 99
@@ -26,11 +23,13 @@ function readData() {
   try {
     return JSON.parse(fs.readFileSync(DATA_PATH, "utf8"))
   } catch (error) {
-    return { guilds: {} }
+    if (error.code === "ENOENT") return { guilds: {} }
+    throw error
   }
 }
 
 function saveData(data) {
+  fs.mkdirSync(dataDirectory, { recursive: true })
   fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 4))
 }
 

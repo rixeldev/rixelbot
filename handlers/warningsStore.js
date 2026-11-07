@@ -1,12 +1,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 
 import path from "node:path"
-import { fileURLToPath } from "node:url"
+import { dataDirectory } from "./dataDirectory.js"
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const dataDirectory = path.join(__dirname, "../data")
 const databasePath = path.join(dataDirectory, "warnings.json")
 
 let writeQueue = Promise.resolve()
