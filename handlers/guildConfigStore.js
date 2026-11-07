@@ -42,10 +42,30 @@ export async function setLogChannel(guildId, channelId) {
   })
 }
 
+export async function setTicketConfig(guildId, ticketConfig) {
+  return updateConfig((config) => {
+    config[guildId] ??= {}
+    config[guildId].ticketConfig = { ...ticketConfig }
+  })
+}
+
 export async function getGuildConfig(guildId) {
   await writeQueue
 
   const config = await readConfig()
 
   return config[guildId] || {}
+}
+
+export async function getConfiguredTicketGuilds() {
+  await writeQueue
+
+  const config = await readConfig()
+
+  return Object.entries(config)
+    .filter(([, guildConfig]) => guildConfig.ticketConfig?.categoryId)
+    .map(([guildId, guildConfig]) => ({
+      guildId,
+      ticketConfig: guildConfig.ticketConfig,
+    }))
 }

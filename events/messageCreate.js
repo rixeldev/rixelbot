@@ -1,7 +1,37 @@
+import {
+  handleTicketDirectMessage,
+  handleTicketGuildMessage,
+} from "../systems/tickets.js"
+
 export function registerMessageHandler(client) {
   client.on("messageCreate", async (message) => {
-    // Ignore messages from bots and messages not in a guild
-    if (message.author.bot || !message.guild) return
+    if (message.author.bot) return
+
+    if (!message.guild) {
+      try {
+        await handleTicketDirectMessage(message)
+      } catch (error) {
+        console.error("Error handling direct-message ticket:", error)
+        await message.channel
+          .send("I could not process that support message. Please try again later.")
+          .catch((sendError) =>
+            console.error("Could not send direct-message error:", sendError),
+          )
+      }
+      return
+    }
+
+    try {
+      if (await handleTicketGuildMessage(message)) return
+    } catch (error) {
+      console.error("Error handling ticket channel message:", error)
+      await message.channel
+        .send("I could not process that ticket message. Please try again later.")
+        .catch((sendError) =>
+          console.error("Could not send ticket message error:", sendError),
+        )
+      return
+    }
 
     const prefix = process.env.PREFIX || "r!"
 

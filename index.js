@@ -1,6 +1,11 @@
 import "dotenv/config"
 
-import { Client, GatewayIntentBits, Collection } from "discord.js"
+import {
+  Client,
+  GatewayIntentBits,
+  Collection,
+  Partials,
+} from "discord.js"
 
 import { loadCommands } from "./handlers/commandHandler.js"
 import { registerEvents } from "./events/ready.js"
@@ -19,7 +24,9 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildModeration,
     GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.DirectMessages,
   ],
+  partials: [Partials.Channel],
 })
 
 client.commands = new Collection()

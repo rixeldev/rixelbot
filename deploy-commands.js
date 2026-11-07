@@ -10,10 +10,23 @@ const __dirname = path.dirname(__filename)
 
 async function deployCommands() {
   try {
-    for (const variable of ["DISCORD_TOKEN", "CLIENT_ID", "GUILD_ID"]) {
+    for (const variable of ["DISCORD_TOKEN", "CLIENT_ID"]) {
       if (!process.env[variable]) {
         throw new Error(`${variable} is required to deploy commands`)
       }
+    }
+
+    const guildIds = (process.env.GUILD_IDS || process.env.GUILD_ID || "")
+      .split(",")
+      .map((guildId) => guildId.trim())
+      .filter(Boolean)
+
+    if (guildIds.length === 0) {
+      throw new Error("GUILD_ID or GUILD_IDS is required to deploy commands")
+    }
+
+    if (guildIds.some((guildId) => !/^\d+$/.test(guildId))) {
+      throw new Error("GUILD_ID and GUILD_IDS must contain Discord server IDs")
     }
 
     const commands = []
@@ -34,15 +47,14 @@ async function deployCommands() {
 
     console.log("Registering commands...")
 
-    await rest.put(
-      Routes.applicationGuildCommands(
-        process.env.CLIENT_ID,
-        process.env.GUILD_ID,
-      ),
-      { body: commands },
-    )
+    for (const guildId of new Set(guildIds)) {
+      await rest.put(
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+        { body: commands },
+      )
+      console.log(`Registered ${commands.length} command(s) in server ${guildId}.`)
+    }
 
-    console.log(`✅ ${commands.length} command(s) registered!`)
   } catch (error) {
     console.error("Error registering commands:", error)
     process.exitCode = 1

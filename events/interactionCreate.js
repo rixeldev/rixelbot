@@ -1,8 +1,12 @@
 import { handleTemporaryVoiceInteraction } from "../systems/temporaryVoice.js"
+import { handleTicketInteraction } from "../systems/tickets.js"
 
 export function registerInteractionHandler(client) {
   client.on("interactionCreate", async (interaction) => {
     try {
+      const ticketHandled = await handleTicketInteraction(interaction)
+      if (ticketHandled) return
+
       // Handle temporary voice buttons and modals first.
       const handled = await handleTemporaryVoiceInteraction(interaction)
       if (handled) return
