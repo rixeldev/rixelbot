@@ -70,25 +70,42 @@ export default {
       ? latestWarnings
           .map((warning, index) => {
             return [
-              `**${index + 1}. Warning ID:** \`${warning.id}\``,
+              `**${index + 1}. Warning ID:** \`${warning.id}\`${warning.revokedAt ? " (REVOKED)" : ""}`,
               `**Reason:** ${warning.reason}`,
               `**Moderator:** <@${warning.moderatorId}>`,
               `**Date:** <t:${Math.floor(new Date(warning.timestamp).getTime() / 1000)}:f>`,
+              ...(warning.revokedAt
+                ? [
+                    `**Revoked by:** <@${warning.revokedBy}>`,
+                    `**Revocation reason:** ${warning.revocationReason}`,
+                  ]
+                : []),
             ].join("\n")
           })
           .join("\n\n")
       : "This member has no recorded warnings."
+
+    const activeWarningCount = warnings.filter(
+      (warning) => !warning.revokedAt,
+    ).length
 
     return new EmbedBuilder()
       .setColor(0xfee75c)
       .setTitle("📋 Warning History")
       .setDescription(description.slice(0, 4000))
       .setThumbnail(user.displayAvatarURL())
-      .addFields({
-        name: "Total Warnings",
-        value: `${warnings.length}`,
-        inline: true,
-      })
+      .addFields(
+        {
+          name: "Active Warnings",
+          value: `${activeWarningCount}`,
+          inline: true,
+        },
+        {
+          name: "Revoked Warnings",
+          value: `${warnings.length - activeWarningCount}`,
+          inline: true,
+        },
+      )
       .setFooter({
         text: `RixelBot • ${user.tag}`,
       })

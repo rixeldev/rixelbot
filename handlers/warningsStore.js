@@ -68,3 +68,19 @@ export async function getWarnings(guildId, userId) {
 
   return database[guildId]?.[userId] || []
 }
+
+export async function revokeWarning(guildId, userId, warningId, revocation) {
+  return updateDatabase((database) => {
+    const warning = database[guildId]?.[userId]?.find(
+      (entry) => entry.id === warningId,
+    )
+
+    if (!warning || warning.revokedAt) return null
+
+    warning.revokedAt = new Date().toISOString()
+    warning.revokedBy = revocation.moderatorId
+    warning.revocationReason = revocation.reason
+
+    return warning
+  })
+}

@@ -116,6 +116,15 @@ existing message without changing its channel, or disable either message with
 Messages** in each configured channel. Bot accounts do not trigger these
 messages.
 
+## Warning management
+
+Moderators with **Moderate Members** can issue warnings with `/warn`, review a
+member's history with `/warnings`, and revoke a specific warning with
+`/clearwarn user:<member> warning_id:<id>`. Revocation preserves the original
+warning and records who revoked it, when, and why; the warning history labels
+revoked entries, and the moderation log records the action when `/setlogs` is
+configured. Supply a reason when revoking a warning for a clearer audit trail.
+
 ## Security notes
 
 - The health endpoint returns only a readiness status; it has no bot controls,

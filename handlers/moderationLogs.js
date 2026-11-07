@@ -3,7 +3,16 @@ import { getGuildConfig } from "./guildConfigStore.js"
 
 export async function logModerationAction(
   client,
-  { guild, action, target, moderator, reason, duration, warningId },
+  {
+    guild,
+    action,
+    target,
+    moderator,
+    reason,
+    duration,
+    warningId,
+    warningReason,
+  },
 ) {
   try {
     const config = await getGuildConfig(guild.id)
@@ -35,6 +44,10 @@ export async function logModerationAction(
       WARN: {
         title: "⚠️ Member Warned",
         color: 0xfee75c,
+      },
+      UNWARN: {
+        title: "↩️ Warning Revoked",
+        color: 0x5865f2,
       },
     }
 
@@ -74,6 +87,13 @@ export async function logModerationAction(
         name: "Warning ID",
         value: warningId,
         inline: true,
+      })
+    }
+
+    if (warningReason) {
+      embed.addFields({
+        name: "Original Warning",
+        value: warningReason,
       })
     }
 
