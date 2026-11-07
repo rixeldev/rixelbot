@@ -73,6 +73,30 @@ them across deploys. Pending server selection for a new DM request expires
 after 10 minutes and is held in memory, so a service restart clears pending
 selections.
 
+## Spam and raid protection
+
+Run `/guard-setup` as a server administrator to choose a private alert channel,
+turn message spam protection, join-raid alerts, and invite filtering on or off,
+and set thresholds. Optional thresholds retain their previous value when
+omitted; `clear_exemptions` removes the configured bypass role and ignored
+channel. The initial thresholds are 6 messages in 8 seconds, 5 mentions in one
+message, 8 joins in 10 seconds, and 3 identical messages.
+Moderators with **Manage Messages**, the configured bypass role, and the
+configured ignored channel are exempt from message filtering.
+
+The recommended `delete_alert` spam action removes the message that trips the
+threshold and alerts staff. `alert_only` does not delete or sanction messages.
+`delete_timeout` additionally applies a 5-minute timeout on the second spam
+detection within 10 minutes; it needs the **Moderate Members** permission.
+Discord invite links are deleted from non-exempt members when the invite filter
+is enabled. Raid detection only alerts staff and never automatically restricts
+new members. Alerts are rate-limited to reduce channel flooding.
+
+The bot needs **Manage Messages** to delete spam/invites, **Send Messages** in
+the alert channel, and **Moderate Members** only when using `delete_timeout`.
+This feature does not automatically ban, kick, or lock the server. Review the
+alert channel and tune thresholds to the server's normal traffic.
+
 ## Security notes
 
 - The health endpoint returns only a readiness status; it has no bot controls,

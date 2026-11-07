@@ -2,6 +2,7 @@ import {
   handleTicketDirectMessage,
   handleTicketGuildMessage,
 } from "../systems/tickets.js"
+import { handleGuildMessageGuard } from "../systems/autoModeration.js"
 
 export function registerMessageHandler(client) {
   client.on("messageCreate", async (message) => {
@@ -19,6 +20,12 @@ export function registerMessageHandler(client) {
           )
       }
       return
+    }
+
+    try {
+      if (await handleGuildMessageGuard(message)) return
+    } catch (error) {
+      console.error("Error handling automatic message protection:", error)
     }
 
     try {

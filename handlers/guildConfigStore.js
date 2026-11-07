@@ -49,6 +49,13 @@ export async function setTicketConfig(guildId, ticketConfig) {
   })
 }
 
+export async function setGuardConfig(guildId, guardConfig) {
+  return updateConfig((config) => {
+    config[guildId] ??= {}
+    config[guildId].guardConfig = { ...guardConfig }
+  })
+}
+
 export async function getGuildConfig(guildId) {
   await writeQueue
 
