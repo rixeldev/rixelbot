@@ -96,13 +96,13 @@ export default {
       `${reason} | Moderator: ${interaction.user.tag}`,
     )
 
-    await logModerationAction(message.client, {
-      guild: message.guild,
+    await logModerationAction(interaction.client, {
+      guild: interaction.guild,
       action: "TIMEOUT",
       target: result.target.user,
-      moderator: message.author,
+      moderator: interaction.user,
       reason,
-      duration: args[1],
+      duration: durationInput,
     })
 
     const embed = new EmbedBuilder()

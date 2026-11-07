@@ -48,11 +48,11 @@ export default {
       reason,
     })
 
-    await logModerationAction(message.client, {
-      guild: message.guild,
+    await logModerationAction(interaction.client, {
+      guild: interaction.guild,
       action: "WARN",
       target: result.target.user,
-      moderator: message.author,
+      moderator: interaction.user,
       reason,
       warningId: warning.id,
     })
@@ -143,7 +143,7 @@ export default {
             .setColor(0xfee75c)
             .setTitle("⚠️ You have received a warning")
             .setDescription(
-              `You received a warning in **${message.guild.name}**.`,
+              `You received a warning in **${interaction.guild.name}**.`,
             )
             .addFields(
               { name: "Reason", value: reason },

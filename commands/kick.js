@@ -74,11 +74,11 @@ export default {
 
     await target.kick(`${reason} | Moderator: ${interaction.user.tag}`)
 
-    await logModerationAction(message.client, {
-      guild: message.guild,
+    await logModerationAction(interaction.client, {
+      guild: interaction.guild,
       action: "KICK",
       target: target.user,
-      moderator: message.author,
+      moderator: interaction.user,
       reason,
     })
 

@@ -52,11 +52,11 @@ export default {
       reason: `${reason} | Moderator: ${interaction.user.tag}`,
     })
 
-    await logModerationAction(message.client, {
-      guild: message.guild,
+    await logModerationAction(interaction.client, {
+      guild: interaction.guild,
       action: "BAN",
       target: result.target.user,
-      moderator: message.author,
+      moderator: interaction.user,
       reason,
     })
 
