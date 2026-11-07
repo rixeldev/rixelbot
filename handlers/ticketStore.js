@@ -83,6 +83,17 @@ export async function getTicketByChannel(channelId) {
   return database.tickets[channelId] || null
 }
 
+export async function getTicketsForGuild(guildId) {
+  await writeQueue
+  const database = await readDatabase()
+
+  return Object.fromEntries(
+    Object.entries(database.tickets).filter(
+      ([, ticket]) => ticket.guildId === guildId,
+    ),
+  )
+}
+
 export async function getOpenTicketByUser(ownerId) {
   await writeQueue
   const database = await readDatabase()

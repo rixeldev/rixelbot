@@ -69,6 +69,14 @@ export async function getWarnings(guildId, userId) {
   return database[guildId]?.[userId] || []
 }
 
+export async function getGuildWarnings(guildId) {
+  await writeQueue
+
+  const database = await readDatabase()
+
+  return database[guildId] || {}
+}
+
 export async function revokeWarning(guildId, userId, warningId, revocation) {
   return updateDatabase((database) => {
     const warning = database[guildId]?.[userId]?.find(

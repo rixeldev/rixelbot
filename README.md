@@ -32,6 +32,14 @@ The persistent disk keeps the service to one instance. Back up `/var/data`
 before destructive disk operations. Do not use the ephemeral filesystem for
 bot data.
 
+Run `/backup` in a server to download an ephemeral JSON attachment containing
+that server's bot configuration, warning history, ticket records, and temporary
+voice-channel state. The command requires **Manage Server** and has an 8 MiB
+download limit. Backups include private ticket metadata and moderation records;
+store downloaded files securely. This export does not include credentials or
+ticket conversation transcripts, and is not a substitute for backing up the
+Render persistent disk.
+
 ## Ticket system
 
 Enable the **Server Members** and **Message Content** privileged gateway

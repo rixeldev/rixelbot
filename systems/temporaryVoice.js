@@ -48,6 +48,16 @@ function getGuildData(guildId) {
   return data.guilds[guildId]
 }
 
+export function getTemporaryVoiceData(guildId) {
+  const data = readData()
+  return structuredClone(
+    data.guilds?.[guildId] || {
+      generatorChannelId: null,
+      temporaryChannels: {},
+    },
+  )
+}
+
 function updateGuildData(guildId, callback) {
   const data = readData()
 
