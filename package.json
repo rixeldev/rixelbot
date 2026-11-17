@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "deploy:commands": "node deploy-commands.js",
+    "monitor": "node scripts/monitor.js",
     "test": "node --test"
   },
   "engines": {

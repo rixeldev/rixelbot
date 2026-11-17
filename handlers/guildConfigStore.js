@@ -1,7 +1,8 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { mkdir, readFile } from "node:fs/promises"
 
 import path from "node:path"
 import { dataDirectory } from "./dataDirectory.js"
+import { writeJsonFile } from "./jsonFile.js"
 
 const configPath = path.join(dataDirectory, "guild-config.json")
 
@@ -25,7 +26,7 @@ async function updateConfig(callback) {
 
     const result = callback(config)
 
-    await writeFile(configPath, JSON.stringify(config, null, 4), "utf8")
+    await writeJsonFile(configPath, config, { spacing: 4 })
 
     return result
   })

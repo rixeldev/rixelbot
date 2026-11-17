@@ -1,8 +1,8 @@
 # RixelBot
 
-Discord moderation bot that runs as a long-lived web service on Render. Its
-HTTP server exposes only `GET /health`; it does not provide an API for bot
-commands or data.
+Discord moderation bot. It runs either as a long-lived web service on Render or
+as a hardened systemd service on your own machine. Its HTTP server exposes only
+`GET /health`; it does not provide an API for bot commands or data.
 
 ## Run locally
 
@@ -31,6 +31,60 @@ startup without replacing files already on the disk.
 The persistent disk keeps the service to one instance. Back up `/var/data`
 before destructive disk operations. Do not use the ephemeral filesystem for
 bot data.
+
+> Free Render web services cannot use persistent disks and spin down after 15
+> minutes without inbound traffic, losing everything under `/var/data`. Use the
+> Starter plan (or self-hosting, below) for a bot that must stay online and keep
+> its data.
+
+## Self-hosting with systemd
+
+`deploy/install.sh` installs the bot as a dedicated `rixelbot` system user:
+
+```bash
+sudo ./deploy/install.sh
+```
+
+It copies the source to `/opt/rixelbot` (read-only at runtime), installs
+production dependencies, stores state in `/var/lib/rixelbot`, and enables
+`rixelbot.service` plus a five-minute health monitor. Secrets live in
+`/etc/rixelbot.env` (`root:rixelbot`, mode `0640`); the installer copies your
+local `.env` the first time and never overwrites it afterwards.
+
+The unit applies systemd sandboxing (`ProtectSystem=strict`, `ProtectHome`,
+`PrivateTmp`, `NoNewPrivileges`, empty capability set) and resource limits
+(`MemoryMax=1G`). The HTTP server binds to `127.0.0.1` by default, so nothing
+is reachable from the network; set `HOST=0.0.0.0` only behind a reverse proxy.
+
+Keep the laptop awake while charging so the bot stays online:
+
+```bash
+sudo install -Dm644 deploy/logind-rixelbot.conf \
+  /etc/systemd/logind.conf.d/50-rixelbot.conf
+sudo systemctl restart systemd-logind
+```
+
+The monitor (`scripts/monitor.js`) checks the health endpoint, the unit state,
+memory, disk usage and interface traffic every five minutes. It logs one line to
+the journal and sends an alert to `ALERT_WEBHOOK_URL` (a Discord webhook) when a
+threshold is exceeded. Traffic totals come from kernel interface counters; for
+per-process live bandwidth install `vnstat` (history) and `bandwhich` (live).
+
+```bash
+systemctl status rixelbot
+journalctl -u rixelbot -f
+journalctl -u rixelbot-monitor -n 20
+```
+
+Updates: pull the repository and re-run `sudo ./deploy/install.sh`.
+
+## Audit log
+
+Every slash and prefix command is recorded in
+`$DATA_DIR/audit/audit-YYYY-MM.jsonl` (one JSON object per line: timestamp,
+command, user, guild, channel, outcome). Commands are rate limited per user and
+server (`COMMAND_RATE_LIMIT`, default 5 per 10 s); rejected commands are logged
+as `rate-limited`. Rotate or archive the monthly files as needed.
 
 Run `/backup` in a server to download an ephemeral JSON attachment containing
 that server's bot configuration, warning history, ticket records, and temporary
@@ -161,13 +215,21 @@ slash and prefix forms record the action in the configured moderation log.
 ## Security notes
 
 - The health endpoint returns only a readiness status; it has no bot controls,
-  request body parsing, or sensitive response data.
+  request body parsing, or sensitive response data. It binds to `127.0.0.1`
+  unless `HOST` says otherwise, so the bot exposes no inbound network surface.
+- The process never executes shell commands, evaluates code, or accepts a
+  request body; all input arrives through Discord's validated interactions.
+- Commands are rate limited per user and server, and every execution is written
+  to a monthly audit log. Data files are written atomically with mode `0600`.
+- Self-hosted deployments run as an unprivileged system user under systemd
+  sandboxing, with the code mounted read-only and an empty capability set.
 - Render terminates public HTTPS connections. Keep the service's bot token in
   Render's secret environment variables and rotate it immediately if exposed.
+  Self-hosted deployments keep it in `/etc/rixelbot.env` (`0640`).
 - Invite the bot with only the permissions it needs, keep Discord privileged
   intents limited to features in use, and restrict moderation commands to
-  trusted roles.
-- Keep dependencies updated and review changes before enabling automatic
-  deployment. No service can be guaranteed "unhackable"; security depends on
-  the Discord account, token handling, permissions, dependencies, and hosting
+  trusted roles in Server Settings → Integrations.
+- Keep dependencies updated, run `npm audit`, and review changes before
+  deploying. No service can be guaranteed "unhackable"; security depends on the
+  Discord account, token handling, permissions, dependencies, and hosting
   configuration as well as this code.

@@ -10,7 +10,13 @@ export function parsePort(value = process.env.PORT) {
   return port
 }
 
-function respond(response, status, body, headers = {}) {
+function respond(
+  response,
+  status,
+  body,
+  headers = {},
+  { headOnly = false } = {},
+) {
   response.writeHead(status, {
     "cache-control": "no-store",
     "content-length": Buffer.byteLength(body),
@@ -18,11 +24,18 @@ function respond(response, status, body, headers = {}) {
     "x-content-type-options": "nosniff",
     ...headers,
   })
+
+  if (headOnly) {
+    response.end()
+    return
+  }
+
   response.end(body)
 }
 
 export function startHealthServer({
   isReady,
+  host = process.env.HOST || "127.0.0.1",
   port = parsePort(),
 } = {}) {
   if (typeof isReady !== "function") {
@@ -31,19 +44,28 @@ export function startHealthServer({
 
   const server = createServer((request, response) => {
     const pathname = (request.url || "").split("?", 1)[0]
+    const headOnly = request.method === "HEAD"
 
     if (pathname !== "/health") {
-      respond(response, 404, "not found")
+      respond(response, 404, "not found", {}, { headOnly })
       return
     }
 
-    if (request.method !== "GET") {
-      respond(response, 405, "method not allowed", { allow: "GET" })
+    if (request.method !== "GET" && !headOnly) {
+      respond(response, 405, "method not allowed", { allow: "GET, HEAD" }, {
+        headOnly,
+      })
       return
     }
 
     const ready = isReady()
-    respond(response, ready ? 200 : 503, ready ? "ok" : "unavailable")
+    respond(
+      response,
+      ready ? 200 : 503,
+      ready ? "ok" : "unavailable",
+      {},
+      { headOnly },
+    )
   })
 
   server.headersTimeout = 10_000
@@ -55,7 +77,7 @@ export function startHealthServer({
     const onError = (error) => reject(error)
 
     server.once("error", onError)
-    server.listen(port, "0.0.0.0", () => {
+    server.listen(port, host, () => {
       server.off("error", onError)
       server.on("error", (error) => {
         console.error("HTTP health server error:", error)

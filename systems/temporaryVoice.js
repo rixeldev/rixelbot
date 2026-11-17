@@ -30,7 +30,19 @@ function readData() {
 
 function saveData(data) {
   fs.mkdirSync(dataDirectory, { recursive: true })
-  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 4))
+
+  const temporaryPath = `${DATA_PATH}.${process.pid}.tmp`
+
+  try {
+    fs.writeFileSync(temporaryPath, JSON.stringify(data, null, 4), {
+      encoding: "utf8",
+      mode: 0o600,
+    })
+    fs.renameSync(temporaryPath, DATA_PATH)
+  } catch (error) {
+    fs.rmSync(temporaryPath, { force: true })
+    throw error
+  }
 }
 
 function getGuildData(guildId) {

@@ -44,7 +44,32 @@ test("health endpoint reports readiness without exposing other routes", async ()
     method: "POST",
   })
   assert.equal(methodResponse.status, 405)
-  assert.equal(methodResponse.headers.get("allow"), "GET")
+  assert.equal(methodResponse.headers.get("allow"), "GET, HEAD")
+
+  const headResponse = await fetch(`${baseUrl}/health`, { method: "HEAD" })
+  assert.equal(headResponse.status, 200)
+  assert.equal(await headResponse.text(), "")
+})
+
+test("health server binds to loopback by default", async () => {
+  const previousHost = process.env.HOST
+  delete process.env.HOST
+
+  try {
+    const server = await startHealthServer({
+      isReady: () => true,
+      port: 0,
+    })
+    servers.push(server)
+
+    assert.equal(server.address().address, "127.0.0.1")
+  } finally {
+    if (previousHost === undefined) {
+      delete process.env.HOST
+    } else {
+      process.env.HOST = previousHost
+    }
+  }
 })
 
 test("PORT is validated before starting the service", () => {

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the RixelBot monitor every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=rixelbot-monitor.service
+
+[Install]
+WantedBy=timers.target

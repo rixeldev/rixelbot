@@ -21,6 +21,11 @@ pnpm-debug.log*
 .env.production
 .env.local
 
+# local runtime data
+data/audit/
+data/warnings.json
+data/tickets.json
+
 # macOS-specific files
 .DS_Store
 

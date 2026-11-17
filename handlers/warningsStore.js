@@ -1,7 +1,8 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { mkdir, readFile } from "node:fs/promises"
 
 import path from "node:path"
 import { dataDirectory } from "./dataDirectory.js"
+import { writeJsonFile } from "./jsonFile.js"
 
 const databasePath = path.join(dataDirectory, "warnings.json")
 
@@ -28,7 +29,7 @@ async function updateDatabase(callback) {
 
     const result = await callback(database)
 
-    await writeFile(databasePath, JSON.stringify(database, null, 4), "utf8")
+    await writeJsonFile(databasePath, database, { spacing: 4 })
 
     return result
   })

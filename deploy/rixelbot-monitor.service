@@ -1,0 +1,19 @@
+[Unit]
+Description=RixelBot health and traffic monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=rixelbot
+Group=rixelbot
+EnvironmentFile=-/etc/rixelbot.env
+EnvironmentFile=-/etc/rixelbot-monitor.env
+ExecStart=/usr/bin/node /opt/rixelbot/scripts/monitor.js
+Nice=10
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+StateDirectory=rixelbot
+StateDirectoryMode=0750

@@ -3,6 +3,8 @@ import {
   handleTicketGuildMessage,
 } from "../systems/tickets.js"
 import { handleGuildMessageGuard } from "../systems/autoModeration.js"
+import { recordAuditEvent } from "../handlers/auditLog.js"
+import { checkCommandRateLimit } from "../handlers/commandRateLimit.js"
 
 export function registerMessageHandler(client) {
   client.on("messageCreate", async (message) => {
@@ -56,10 +58,49 @@ export function registerMessageHandler(client) {
 
     if (!command || typeof command.executePrefix !== "function") return
 
+    const rate = checkCommandRateLimit({
+      guildId: message.guildId,
+      userId: message.author.id,
+    })
+
+    if (!rate.allowed) {
+      recordAuditEvent({
+        type: "command",
+        source: "prefix",
+        command: commandName,
+        outcome: "rate-limited",
+        userId: message.author.id,
+        guildId: message.guildId,
+        channelId: message.channelId,
+      })
+
+      await message
+        .reply(
+          `⏳ Too many commands. Try again in ${Math.ceil(
+            rate.retryAfterMs / 1000,
+          )}s.`,
+        )
+        .catch(console.error)
+      return
+    }
+
+    const auditEvent = {
+      type: "command",
+      source: "prefix",
+      command: commandName,
+      userId: message.author.id,
+      guildId: message.guildId,
+      channelId: message.channelId,
+    }
+
     try {
       await command.executePrefix(message, args)
+
+      recordAuditEvent({ ...auditEvent, outcome: "success" })
     } catch (error) {
       console.error(`Error in command ${commandName}:`, error)
+
+      recordAuditEvent({ ...auditEvent, outcome: "error" })
 
       await message.reply("❌ An error occurred while executing this command.")
     }
