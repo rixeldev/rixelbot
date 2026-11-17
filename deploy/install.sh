@@ -54,7 +54,8 @@ install -m 0644 "$SOURCE_DIR/deploy/rixelbot-monitor.timer" \
   /etc/systemd/system/rixelbot-monitor.timer
 
 systemctl daemon-reload
-systemctl enable --now rixelbot.service
+systemctl enable rixelbot.service
+systemctl restart rixelbot.service
 systemctl enable --now rixelbot-monitor.timer
 
 echo "RixelBot installed."

@@ -18,6 +18,7 @@ import { initializeDataDirectory } from "./handlers/dataDirectory.js"
 import registerGuildMemberAdd from "./events/guildMemberAdd.js"
 import registerGuildMemberRemove from "./events/guildMemberRemove.js"
 import registerReactionRoleEvents from "./events/reactionRole.js"
+import { registerGatewayNotifications } from "./systems/gatewayNotifications.js"
 
 const client = new Client({
   intents: [
@@ -81,6 +82,7 @@ async function startBot() {
     registerGuildMemberAdd(client)
     registerGuildMemberRemove(client)
     registerReactionRoleEvents(client)
+    registerGatewayNotifications(client)
 
     healthServer = await startHealthServer({
       isReady: () => client.isReady(),

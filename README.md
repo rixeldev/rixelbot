@@ -72,6 +72,26 @@ threshold is exceeded. A problem that persists repeats at most every 30 minutes
 totals come from kernel interface counters; for per-process live bandwidth
 install `vnstat` (history) and `bandwhich` (live).
 
+### Alerts on startup, crashes and disconnects
+
+Set `ALERT_WEBHOOK_URL` in `/etc/rixelbot.env`; the bot and the monitor both read
+that file (the monitor also accepts `/etc/rixelbot-monitor.env`). The service is
+enabled at boot, so the bot starts by itself after a reboot and stays under
+`Restart=always`.
+
+- The bot posts `online as <name> (N server(s))` when the Discord gateway is
+  ready.
+- Gateway drops post `disconnected from Discord (code …)` and
+  `reconnected to Discord (… events replayed)` when they recover.
+- `ExecStopPost` posts `stopped unexpectedly (exit code …)` or
+  `stopped by signal …` when the process dies. Clean stops (shutdown, manual
+  restart) stay silent.
+- The monitor still adds its five-minute health, memory, disk and traffic checks.
+
+Notices are throttled per kind (`NOTIFY_COOLDOWN_MS`, default 60 s for lifecycle
+events; `NOTIFY_GATEWAY_COOLDOWN_MS`, default 5 min for gateway events), so a
+crash loop cannot flood the channel.
+
 ```bash
 systemctl status rixelbot
 journalctl -u rixelbot -f

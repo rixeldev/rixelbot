@@ -16,6 +16,9 @@ Environment=DATA_DIR=/var/lib/rixelbot/data
 Environment=HOST=127.0.0.1
 Environment=PORT=3000
 ExecStart=/usr/bin/node index.js
+# Report crashes to the alert webhook. systemd sets SERVICE_RESULT, EXIT_CODE
+# and EXIT_STATUS for this command; a clean stop stays silent.
+ExecStopPost=-/usr/bin/node /opt/rixelbot/scripts/notify.js stopped
 Restart=always
 RestartSec=5
 TimeoutStopSec=20

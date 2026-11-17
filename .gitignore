@@ -23,6 +23,7 @@ pnpm-debug.log*
 
 # local runtime data
 data/audit/
+data/notify-state.json
 data/warnings.json
 data/tickets.json
 
