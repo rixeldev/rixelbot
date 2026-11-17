@@ -7,7 +7,7 @@ import {
 function createRulesEmbeds() {
   const color = 0x940000
 
-  // 1. Embed Principal / Introducción
+  // 1. Main embed / Introduction
   const mainEmbed = new EmbedBuilder()
     .setColor(color)
     .setTitle("📜 REGLAS DEL SERVER")
