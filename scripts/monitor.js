@@ -3,6 +3,7 @@
 import { execFile } from "node:child_process"
 import { mkdir, readFile, rename, statfs, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { pathToFileURL } from "node:url"
 import { promisify } from "node:util"
 
 const execFileAsync = promisify(execFile)
@@ -22,11 +23,55 @@ const diskLimitPercent = Number(process.env.ALERT_DISK_PERCENT || 85)
 const trafficLimitMbps = Number(process.env.ALERT_MBPS || 50)
 const latencyLimitMs = Number(process.env.ALERT_LATENCY_MS || 2_000)
 
+/**
+ * Decides which alerts and recovery notices to emit for this run.
+ *
+ * - A problem alerts at most once every `cooldownMs`.
+ * - A problem that disappears emits one recovery notice and clears its
+ *   cooldown, so a later recurrence alerts immediately.
+ */
+export function planAlerts(state, problems, now, cooldownMs) {
+  state.alerts ??= {}
+  state.active ??= {}
+
+  const currentKinds = new Set(problems.map(([kind]) => kind))
+  const alerts = []
+  const recovered = []
+
+  for (const [kind, message] of problems) {
+    state.active[kind] ??= { message, since: now }
+    state.active[kind].message = message
+
+    const lastAlert = state.alerts[kind]
+
+    if (lastAlert === undefined || now - lastAlert >= cooldownMs) {
+      state.alerts[kind] = now
+      alerts.push({ kind, message })
+    }
+  }
+
+  for (const [kind, active] of Object.entries(state.active)) {
+    if (currentKinds.has(kind)) continue
+
+    const minutes = Math.max(1, Math.round((now - active.since) / 60_000))
+
+    recovered.push({
+      kind,
+      message: `${active.message} (resolved after ${minutes} min)`,
+    })
+
+    delete state.active[kind]
+    delete state.alerts[kind]
+  }
+
+  return { alerts, recovered }
+}
+
 async function readState() {
   try {
     return JSON.parse(await readFile(statePath, "utf8"))
   } catch (error) {
-    if (error.code === "ENOENT") return { alerts: {}, sample: null, day: null }
+    if (error.code === "ENOENT") return { alerts: {}, active: {}, sample: null, day: null }
     throw error
   }
 }
@@ -94,36 +139,28 @@ async function diskUsagePercent() {
   return Math.round((used / stats.blocks) * 100)
 }
 
-async function sendAlert(state, kind, message, now) {
-  const lastAlert = state.alerts[kind] || 0
-
-  if (now - lastAlert < alertCooldownMs) return false
-
-  state.alerts[kind] = now
-
-  const text = `[RixelBot] ${message}`
+async function sendMessage(text) {
+  const message = `[RixelBot] ${text}`
 
   if (!webhookUrl) {
-    console.error(`ALERT ${text}`)
-    return true
+    console.error(`ALERT ${message}`)
+    return
   }
 
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ content: text }),
+      body: JSON.stringify({ content: message }),
       signal: AbortSignal.timeout(10_000),
     })
 
     if (!response.ok) {
-      console.error(`ALERT ${text} (webhook responded ${response.status})`)
+      console.error(`ALERT ${message} (webhook responded ${response.status})`)
     }
   } catch (error) {
-    console.error(`ALERT ${text} (webhook failed: ${error.message})`)
+    console.error(`ALERT ${message} (webhook failed: ${error.message})`)
   }
-
-  return true
 }
 
 async function checkHealth() {
@@ -234,10 +271,19 @@ async function main() {
       : state.sample
   }
 
-  const alerts = []
+  const { alerts, recovered } = planAlerts(
+    state,
+    problems,
+    now,
+    alertCooldownMs,
+  )
 
-  for (const [kind, message] of problems) {
-    if (await sendAlert(state, kind, message, now)) alerts.push(message)
+  for (const alert of alerts) {
+    await sendMessage(alert.message)
+  }
+
+  for (const notice of recovered) {
+    await sendMessage(`recovered: ${notice.message}`)
   }
 
   await writeState(state)
@@ -266,7 +312,12 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error("Monitor failed:", error)
-  process.exitCode = 1
-})
+const isDirectRun =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href
+
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error("Monitor failed:", error)
+    process.exitCode = 1
+  })
+}

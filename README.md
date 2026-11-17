@@ -67,8 +67,10 @@ sudo systemctl restart systemd-logind
 The monitor (`scripts/monitor.js`) checks the health endpoint, the unit state,
 memory, disk usage and interface traffic every five minutes. It logs one line to
 the journal and sends an alert to `ALERT_WEBHOOK_URL` (a Discord webhook) when a
-threshold is exceeded. Traffic totals come from kernel interface counters; for
-per-process live bandwidth install `vnstat` (history) and `bandwhich` (live).
+threshold is exceeded. A problem that persists repeats at most every 30 minutes
+(`ALERT_COOLDOWN_MS`), and a recovery notice is sent when it stops. Traffic
+totals come from kernel interface counters; for per-process live bandwidth
+install `vnstat` (history) and `bandwhich` (live).
 
 ```bash
 systemctl status rixelbot
