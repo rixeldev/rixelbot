@@ -20,7 +20,7 @@ const webhookUrl = process.env.ALERT_WEBHOOK_URL || ""
 const alertCooldownMs = Number(process.env.ALERT_COOLDOWN_MS || 1_800_000)
 const memoryLimitMb = Number(process.env.ALERT_MEMORY_MB || 512)
 const diskLimitPercent = Number(process.env.ALERT_DISK_PERCENT || 85)
-const trafficLimitMbps = Number(process.env.ALERT_MBPS || 50)
+const trafficLimitMbps = Number(process.env.ALERT_MBPS || 0)
 const latencyLimitMs = Number(process.env.ALERT_LATENCY_MS || 2_000)
 
 /**
@@ -57,7 +57,7 @@ export function planAlerts(state, problems, now, cooldownMs) {
 
     recovered.push({
       kind,
-      message: `${active.message} (resolved after ${minutes} min)`,
+      message: `${kind} (resolved after ${minutes} min)`,
     })
 
     delete state.active[kind]
@@ -252,7 +252,10 @@ async function main() {
         traffic.day = day
         state.day = day
 
-        if (traffic.rxMbps + traffic.txMbps > trafficLimitMbps) {
+        if (
+          trafficLimitMbps > 0 &&
+          traffic.rxMbps + traffic.txMbps > trafficLimitMbps
+        ) {
           problems.push([
             "traffic",
             `traffic is ${(traffic.rxMbps + traffic.txMbps).toFixed(1)} Mbps (limit ${trafficLimitMbps} Mbps)`,

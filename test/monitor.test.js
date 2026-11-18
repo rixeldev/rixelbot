@@ -64,6 +64,11 @@ test("a resolved problem emits one recovery and clears its cooldown", () => {
   assert.equal(resolved.alerts.length, 0)
   assert.equal(resolved.recovered.length, 1)
   assert.match(resolved.recovered[0].message, /resolved after 10 min/)
+  assert.doesNotMatch(
+    resolved.recovered[0].message,
+    /service is not active/,
+    "recovery notices must not repeat the stale problem text",
+  )
 
   const stillResolved = planAlerts(state, [], 20 * 60_000, cooldown)
   assert.equal(stillResolved.recovered.length, 0)
