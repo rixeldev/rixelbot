@@ -11,6 +11,8 @@ User=rixelbot
 Group=rixelbot
 WorkingDirectory=/opt/rixelbot
 EnvironmentFile=/etc/rixelbot.env
+# Optional: share the alert webhook (and other overrides) with the monitor.
+EnvironmentFile=-/etc/rixelbot-monitor.env
 Environment=NODE_ENV=production
 Environment=DATA_DIR=/var/lib/rixelbot/data
 Environment=HOST=127.0.0.1

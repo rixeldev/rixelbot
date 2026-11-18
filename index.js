@@ -75,6 +75,12 @@ async function startBot() {
     await initializeDataDirectory()
     await loadCommands(client)
 
+    if (!process.env.ALERT_WEBHOOK_URL) {
+      console.warn(
+        "ALERT_WEBHOOK_URL is not set; alerts will only be written to the journal",
+      )
+    }
+
     registerEvents(client)
     registerInteractionHandler(client)
     registerMessageHandler(client)

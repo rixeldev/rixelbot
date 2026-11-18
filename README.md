@@ -75,7 +75,8 @@ install `vnstat` (history) and `bandwhich` (live).
 ### Alerts on startup, crashes and disconnects
 
 Set `ALERT_WEBHOOK_URL` in `/etc/rixelbot.env`; the bot and the monitor both read
-that file (the monitor also accepts `/etc/rixelbot-monitor.env`). The service is
+that file, and the service also reads `/etc/rixelbot-monitor.env` when it exists,
+so either file works for both. The service is
 enabled at boot, so the bot starts by itself after a reboot and stays under
 `Restart=always`.
 
