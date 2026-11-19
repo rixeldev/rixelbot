@@ -71,7 +71,9 @@ threshold is exceeded. A problem that persists repeats at most every 30 minutes
 (`ALERT_COOLDOWN_MS`), and a recovery notice is sent when it stops. Traffic
 totals come from kernel interface counters and are always included in the daily
 summary; the traffic *alert* is off by default because it measures the whole
-machine, not the bot — set `ALERT_MBPS` (for example `200`) to enable it. For
+machine, not the bot — set `ALERT_MBPS` (for example `200`) to enable it. The
+endpoint returns 503 while Discord is not ready, so that state only alerts after
+`HEALTH_GRACE_MS` (10 min); an unreachable endpoint alerts immediately. For
 per-process live bandwidth install `vnstat` (history) and `bandwhich` (live).
 
 ### Alerts on startup, crashes and disconnects

@@ -22,6 +22,43 @@ const memoryLimitMb = Number(process.env.ALERT_MEMORY_MB || 512)
 const diskLimitPercent = Number(process.env.ALERT_DISK_PERCENT || 85)
 const trafficLimitMbps = Number(process.env.ALERT_MBPS || 0)
 const latencyLimitMs = Number(process.env.ALERT_LATENCY_MS || 2_000)
+const healthGraceMs = Number(process.env.HEALTH_GRACE_MS || 600_000)
+
+/**
+ * Interprets a health probe. A 503 means the bot process is alive but Discord
+ * is not ready yet (gateway down), so it only becomes a problem after
+ * `graceMs`; an unreachable endpoint is always reported immediately.
+ */
+export function evaluateHealth({
+  health,
+  degradedSince,
+  now,
+  graceMs,
+  healthUrl,
+}) {
+  if (health.status === 503) {
+    const since = degradedSince ?? now
+    const degradedMs = now - since
+
+    return {
+      degradedSince: since,
+      problem:
+        degradedMs >= graceMs
+          ? [
+              "health",
+              `bot has not been ready for ${Math.round(degradedMs / 60_000)} min (status 503)`,
+            ]
+          : null,
+    }
+  }
+
+  return {
+    degradedSince: null,
+    problem: health.ok
+      ? null
+      : ["health", `health check failed (status ${health.status}) at ${healthUrl}`],
+  }
+}
 
 /**
  * Decides which alerts and recovery notices to emit for this run.
@@ -187,13 +224,19 @@ async function main() {
   const problems = []
 
   const health = await checkHealth()
+  const healthResult = evaluateHealth({
+    health,
+    degradedSince: state.health?.degradedSince ?? null,
+    now,
+    graceMs: healthGraceMs,
+    healthUrl,
+  })
 
-  if (!health.ok) {
-    problems.push([
-      "health",
-      `health check failed (status ${health.status}) at ${healthUrl}`,
-    ])
-  } else if (health.latencyMs > latencyLimitMs) {
+  state.health = { degradedSince: healthResult.degradedSince }
+
+  if (healthResult.problem) {
+    problems.push(healthResult.problem)
+  } else if (health.ok && health.latencyMs > latencyLimitMs) {
     problems.push([
       "latency",
       `health check took ${health.latencyMs} ms (limit ${latencyLimitMs} ms)`,
@@ -298,7 +341,11 @@ async function main() {
 
   console.log(
     [
-      health.ok ? "health ok" : "health FAILED",
+      health.ok
+        ? "health ok"
+        : health.status === 503
+          ? "health degraded (not ready)"
+          : "health FAILED",
       `${health.latencyMs} ms`,
       service.isActive ? "service active" : "service INACTIVE",
       service.memoryMb === null ? "memory unknown" : `${service.memoryMb} MB`,

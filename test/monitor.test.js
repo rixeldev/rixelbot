@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 
-import { planAlerts } from "../scripts/monitor.js"
+import { planAlerts, evaluateHealth } from "../scripts/monitor.js"
 
 const cooldown = 1_800_000
 
@@ -80,4 +80,61 @@ test("a resolved problem emits one recovery and clears its cooldown", () => {
     cooldown,
   )
   assert.equal(recurrence.alerts.length, 1)
+})
+
+test("a 503 only becomes a problem after the grace period", () => {
+  const grace = 600_000
+  const url = "http://127.0.0.1:3000/health"
+
+  const first = evaluateHealth({
+    health: { ok: false, status: 503 },
+    degradedSince: null,
+    now: 1_000,
+    graceMs: grace,
+    healthUrl: url,
+  })
+
+  assert.equal(first.problem, null)
+  assert.equal(first.degradedSince, 1_000)
+
+  const short = evaluateHealth({
+    health: { ok: false, status: 503 },
+    degradedSince: first.degradedSince,
+    now: 1_000 + 5 * 60_000,
+    graceMs: grace,
+    healthUrl: url,
+  })
+  assert.equal(short.problem, null)
+
+  const long = evaluateHealth({
+    health: { ok: false, status: 503 },
+    degradedSince: first.degradedSince,
+    now: 1_000 + 10 * 60_000,
+    graceMs: grace,
+    healthUrl: url,
+  })
+  assert.match(long.problem[1], /not been ready for 10 min \(status 503\)/)
+})
+
+test("a healthy or unreachable endpoint is decided immediately", () => {
+  const url = "http://127.0.0.1:3000/health"
+
+  const healthy = evaluateHealth({
+    health: { ok: true, status: 200 },
+    degradedSince: 5_000,
+    now: 6_000,
+    graceMs: 600_000,
+    healthUrl: url,
+  })
+  assert.equal(healthy.problem, null)
+  assert.equal(healthy.degradedSince, null)
+
+  const down = evaluateHealth({
+    health: { ok: false, status: 0 },
+    degradedSince: 5_000,
+    now: 6_000,
+    graceMs: 600_000,
+    healthUrl: url,
+  })
+  assert.match(down.problem[1], /health check failed \(status 0\)/)
 })
