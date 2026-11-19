@@ -21,11 +21,11 @@ export function describeServiceStop({
 
   switch (serviceResult) {
     case "exit-code":
-      return `stopped unexpectedly (exit code ${exitCode || exitStatus || "unknown"}${pid})`
+      return `stopped unexpectedly (exit status ${exitStatus ?? exitCode ?? "unknown"}${pid})`
     case "signal":
-      return `stopped by signal ${exitCode || exitStatus || "unknown"}${pid}`
+      return `stopped by signal ${exitStatus || exitCode || "unknown"}${pid}`
     case "core-dump":
-      return `crashed and dumped core${pid}`
+      return `crashed and dumped core${exitStatus ? ` (signal ${exitStatus})` : ""}${pid}`
     case "resources":
       return `stopped: resource limit reached${pid}`
     case "timeout":

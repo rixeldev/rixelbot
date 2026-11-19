@@ -86,9 +86,11 @@ enabled at boot, so the bot starts by itself after a reboot and stays under
   ready.
 - Gateway drops post `disconnected from Discord (code …)` and
   `reconnected to Discord (… events replayed)` when they recover.
-- `ExecStopPost` posts `stopped unexpectedly (exit code …)` or
+- `ExecStopPost` posts `stopped unexpectedly (exit status …)` or
   `stopped by signal …` when the process dies. Clean stops (shutdown, manual
   restart) stay silent.
+- Login retries transient DNS/network failures (common right after boot) before
+  giving up, so a slow network does not crash the service.
 - The monitor still adds its five-minute health, memory, disk and traffic checks.
 
 Notices are throttled per kind (`NOTIFY_COOLDOWN_MS`, default 60 s for lifecycle

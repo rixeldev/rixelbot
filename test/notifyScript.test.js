@@ -8,15 +8,15 @@ test("a clean stop produces no notification", () => {
   assert.equal(describeServiceStop({}), null)
 })
 
-test("an unexpected exit reports the code and pid", () => {
+test("an unexpected exit reports the numeric status and pid", () => {
   assert.equal(
     describeServiceStop({
       serviceResult: "exit-code",
-      exitCode: "1",
+      exitCode: "exited",
       exitStatus: "1",
       mainPid: "4242",
     }),
-    "stopped unexpectedly (exit code 1, pid 4242)",
+    "stopped unexpectedly (exit status 1, pid 4242)",
   )
 })
 
@@ -24,10 +24,10 @@ test("a signal death names the signal", () => {
   assert.equal(
     describeServiceStop({
       serviceResult: "signal",
-      exitCode: "SIGKILL",
-      exitStatus: "9",
+      exitCode: "killed",
+      exitStatus: "KILL",
     }),
-    "stopped by signal SIGKILL",
+    "stopped by signal KILL",
   )
 })
 
