@@ -86,8 +86,9 @@ enabled at boot, so the bot starts by itself after a reboot and stays under
 
 - The bot posts `online as <name> (N server(s))` when the Discord gateway is
   ready.
-- Gateway drops post `disconnected from Discord (code …)` and
-  `reconnected to Discord (… events replayed)` when they recover.
+- Short gateway blips stay silent; a reconnect is reported only after
+  `NOTIFY_RECONNECT_MS` (60 s) with its duration, and the close code is written
+  to the journal. Unrecoverable closes and gateway errors always alert.
 - `ExecStopPost` posts `stopped unexpectedly (exit status …)` or
   `stopped by signal …` when the process dies. Clean stops (shutdown, manual
   restart) stay silent.
